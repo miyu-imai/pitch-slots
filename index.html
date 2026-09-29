@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pitch Slots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one quiet centered stage. Three porcelain windows, one sentence, one button, one thin clock line. Log and leaderboard sit behind text tabs. */
+:root {
+  --bg: #eef0f3;
+  --surface: #ffffff;
+  --ink: #161a23;
+  --muted: #7a8190;
+  --hair: #dde1e7;
+  --accent: #2f4ad8;
+  --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(22,26,35,.04), 0 12px 32px -12px rgba(22,26,35,.14);
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --rh: 84px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6); color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--sans); padding-inline: 16px; padding-block: 24px 64px; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 980px; margin: 0 auto; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.mark { font: italic 400 26px/1 var(--serif); letter-spacing: -.01em; }
+nav { display: flex; gap: 22px; }
+nav button { background: none; border: 0; padding: 4px 0; font: 500 13px var(--sans); color: var(--muted); cursor: pointer; border-bottom: 1px solid transparent; }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, label.upload:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+/* Stage */
+.stage { display: grid; justify-items: center; gap: 36px; padding-block: clamp(40px, 9vh, 96px) 24px; }
+.reels { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .reels { grid-template-columns: minmax(0,1fr); gap: 14px; } .window { height: calc(var(--rh) * 1.7); } .hint { display: none; } .stage { padding-block: 28px 16px; gap: 28px; } }
+.reel { display: grid; gap: 12px; min-width: 0; }
+.reel-top { display: flex; justify-content: space-between; align-items: center; padding-inline: 4px; }
+.label { font: 500 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.hold { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--hair); background: transparent; color: var(--muted); cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.hold svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.hold[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.window {
+  position: relative; height: calc(var(--rh) * 2.4); overflow: hidden;
+  background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
+}
+.strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.cell { height: var(--rh); display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 18px; font: 400 clamp(26px, 3.4vw, 34px)/1.05 var(--serif); letter-spacing: -.01em; text-wrap: balance; overflow-wrap: anywhere; color: var(--muted); opacity: .45; }
+.cell.on { color: var(--ink); opacity: 1; }
+.moving .cell { color: var(--ink); opacity: .9; }
+.moving .strip { filter: blur(1.2px); }
+.sentence { font: italic 400 clamp(22px, 3vw, 30px)/1.25 var(--serif); text-align: center; text-wrap: balance; max-width: 30ch; min-height: 2.5em; color: var(--ink); }
+.sentence span { color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; }
+.spin { font: 500 15px var(--sans); letter-spacing: .02em; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 999px; padding: 15px 44px; cursor: pointer; transition: transform .15s, opacity .2s; }
+.spin:hover { transform: translateY(-1px); }
+.spin:active { transform: translateY(1px); }
+.spin:disabled { opacity: .55; cursor: default; transform: none; }
+.ghost { font: 500 14px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--hair); border-radius: 999px; padding: 14px 24px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.ghost:disabled { color: var(--muted); cursor: default; }
+.clock { width: min(420px, 100%); display: grid; gap: 10px; justify-items: center; }
+.time { font: 400 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.time b { font-weight: 500; color: var(--ink); }
+.bar { width: 100%; height: 2px; background: var(--hair); border-radius: 2px; overflow: hidden; }
+.fill { height: 100%; width: 100%; background: var(--ink); transform-origin: left; transition: transform .25s linear; }
+.clock.warn .fill { background: var(--accent); }
+.clock.done .time b { color: var(--accent); }
+.clock-links { display: flex; gap: 18px; }
+.link { background: none; border: 0; padding: 0; font: 500 12px var(--sans); color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair); }
+.link:hover { color: var(--ink); }
+.link:disabled { opacity: .4; cursor: default; }
+.hint { font-size: 12px; color: var(--muted); }
+.hint kbd { font: 400 11px var(--mono); border: 1px solid var(--hair); border-radius: 5px; padding: 1px 6px; }
+
+/* Lists */
+.panel { padding-block: 48px 0; display: grid; gap: 28px; max-width: 720px; margin: 0 auto; }
+.panel-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.panel-head h2 { margin: 0; font: italic 400 34px/1.1 var(--serif); }
+.panel-head p { margin: 4px 0 0; color: var(--muted); }
+.list { display: grid; }
+.item { padding-block: 24px; border-top: 1px solid var(--hair); display: grid; gap: 14px; min-width: 0; }
+.item:last-child { border-bottom: 1px solid var(--hair); }
+.combo { font: 400 22px/1.2 var(--serif); overflow-wrap: anywhere; }
+.combo i { color: var(--muted); font-style: normal; padding-inline: 6px; }
+.meta { font: 400 12px var(--mono); color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hair); display: inline-block; }
+.dot.on { background: var(--accent); }
+.fields { display: grid; gap: 10px; }
+input[type=text], input[type=url], textarea { width: 100%; min-width: 0; font: 400 14px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 11px 14px; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+textarea { resize: vertical; min-height: 64px; }
+.actions { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.small-btn { font: 500 13px var(--sans); color: var(--accent-ink); background: var(--ink); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.small-btn:disabled { opacity: .5; }
+.danger { color: #c2493a; text-decoration-color: currentColor; }
+.upload { cursor: pointer; }
+.deck a, .lb a { color: var(--ink); text-underline-offset: 3px; }
+.empty { color: var(--muted); padding-block: 40px; text-align: center; font: italic 400 20px var(--serif); }
+.lb { grid-template-columns: 36px minmax(0,1fr) auto; align-items: start; column-gap: 18px; }
+.rank { font: 400 28px/1 var(--serif); color: var(--muted); font-variant-numeric: tabular-nums; }
+.lb h3 { margin: 0 0 4px; font: 400 26px/1.15 var(--serif); overflow-wrap: anywhere; }
+.lb .combo { font: 400 13px var(--sans); color: var(--muted); }
+.lb .combo i { padding-inline: 4px; }
+.lb p { margin: 8px 0 0; overflow-wrap: anywhere; }
+.vote { display: grid; justify-items: center; gap: 2px; min-width: 52px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--hair); background: transparent; color: var(--ink); cursor: pointer; font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
+.vote svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.vote[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.vote:disabled { opacity: .5; cursor: default; }
+.seg { display: flex; gap: 18px; }
+.notice { font-size: 13px; color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 500 13px var(--sans); padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); }
+@media (prefers-reduced-motion: reduce) { .moving .strip { filter: none; } .fill { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="mark">Pitch Slots</div>
+    <nav role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-spin" aria-selected="true" data-tab="spin">Spin</button>
+      <button role="tab" id="tab-log" aria-selected="false" data-tab="log">Log</button>
+      <button role="tab" id="tab-board" aria-selected="false" data-tab="board">Leaderboard</button>
+    </nav>
+  </header>
+
+  <section id="view-spin" class="stage">
+    <div class="reels">
+      <div class="reel"><div class="reel-top"><span class="label">Sector</span><button class="hold" id="lock-0" aria-pressed="false" aria-label="Hold sector"></button></div><div class="window" id="win-0"><div class="strip" id="strip-0"></div></div></div>
+      <div class="reel"><div class="reel-top"><span class="label">Customer</span><button class="hold" id="lock-1" aria-pressed="false" aria-label="Hold customer"></button></div><div class="window" id="win-1"><div class="strip" id="strip-1"></div></div></div>
+      <div class="reel"><div class="reel-top"><span class="label">Model</span><button class="hold" id="lock-2" aria-pressed="false" aria-label="Hold business model"></button></div><div class="window" id="win-2"><div class="strip" id="strip-2"></div></div></div>
+    </div>
+    <div class="sentence" id="sentence" aria-live="polite"></div>
+    <div class="controls">
+      <button class="spin" id="pull">Spin</button>
+      <button class="ghost" id="clock-start">Start 30:00</button>
+    </div>
+    <div class="clock" id="clock">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="time" id="time"><b>30:00</b></div>
+      <div class="clock-links">
+        <button class="link" id="clock-pause" disabled>Pause</button>
+        <button class="link" id="clock-reset">Reset</button>
+      </div>
+    </div>
+    <div class="hint"><kbd>Space</kbd> to spin</div>
+  </section>
+
+  <section id="view-log" class="panel" hidden>
+    <div class="panel-head"><div><h2>Log</h2><p>Every combo you put on the clock. Saved in this browser.</p></div>
+      <input type="text" id="my-name" placeholder="Your name for the leaderboard" aria-label="Your name for the leaderboard" maxlength="40" style="max-width:260px"></div>
+    <div class="list" id="log-list"></div>
+  </section>
+
+  <section id="view-board" class="panel" hidden>
+    <div class="panel-head">
+      <div><h2>Leaderboard</h2><p>Upvote the ones you would fund.</p></div>
+      <div class="seg"><button class="link" id="sort-top" aria-pressed="true" style="color:var(--ink)">Top</button><button class="link" id="sort-new" aria-pressed="false">Newest</button></div>
+    </div>
+    <div class="list" id="board-list"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const SECTORS = ["Neuroscience","Insurance","Beekeeping","Quantum computing","Funeral services","Luxury yachts","Dairy farming","Space tourism","Dentistry","Fermentation","Opera","Pet psychology","Cybersecurity","Wedding planning","Nuclear energy","Tattoos","Sleep science","Archaeology","Plumbing","Perfume","Esports","Genomics","Ice sculpture","Carbon capture","Taxidermy","Sushi","Satellite imaging","Hot springs","Karaoke","Robotics","Container shipping","Violin making","Mushroom foraging","Real estate","Stage magic","Pharmaceuticals","Parking","Wine","Legal services","Deep-sea mining","Calligraphy","Weather forecasting","Circus arts","Composting","Watchmaking","Aviation","Origami","Longevity","Translation","Cheese","Laundry","Drones","Chess","Vertical farming","Sneakers","Mattresses","Bridge building","Snow removal","Pickleball","Hydrogen fuel","Voice acting","Stand-up comedy","Stationery","Elevators","Lighthouses","Air quality","Bonsai","Ramen","Hearing aids","Horse racing","Crossword puzzles","Firefighting gear","Vending machines","Glassblowing","Ghost tours"];
+const CUSTOMERS = ["Cowboys","Astronauts","Sumo wrestlers","Retired spies","Kindergarten teachers","Lighthouse keepers","Monks","Night-shift nurses","Pro gamers","Grandmothers in Osaka","Tech CEOs","Ballet dancers","Long-haul truckers","Hedge fund managers","Identical twins","Left-handed people","Opera singers","Zookeepers","Divorce lawyers","Marathon runners","Submarine crews","Iowa corn farmers","Medieval reenactors","Antarctic researchers","Wedding DJs","Poker players","Surgeons","Florida retirees","Air traffic controllers","Deep-sea fishermen","Magicians","Night owls","Firefighters","Royal families","Crossword addicts","Jazz musicians","Ghost hunters","Bodybuilders","Nuns","Film directors","Tokyo taxi drivers","Stay-at-home dads","Bored billionaires","Polar explorers","Circus performers","Sommeliers","Park rangers","Chess grandmasters","Cat owners","Introverts","Cruise ship crews","First-contact aliens","Time travelers","Mall Santas","Rodeo clowns","Olympic curlers","Podcast hosts","Street food vendors","Ski instructors","Small-town mayors","Middle managers","Honeymooners","Beekeepers","Violinists","Kaiju survivors","Dog walkers","Museum guards","Wedding planners","Stunt doubles","Village blacksmiths","Newly retired CEOs","Competitive eaters"];
+const MODELS = ["Fund","Subscription","Franchise","Marketplace","Freemium","Pay-per-use","Members-only club","Rental","Auction house","Crowdfunding","Licensing","Ad-supported","Cooperative","Nonprofit","Consultancy","Insurance pool","Leasing","Pawn shop","Loyalty points","Vending machine","Pop-up shop","Direct-to-consumer","B2B SaaS","Referral fees","Timeshare","Lottery","Tournament entry fees","Sponsorship","Flash sales","Tip jar","Gacha capsules","Patronage","Revenue share","Escrow","Consignment","Rent-to-own","Pay what you want","Certification program","Academy","Hardware plus subscription","White-label","Barter exchange","Reverse auction","Guided tours","Bounty board","Syndicate","Media company","Holding company","Waitlist-only luxury","Roll-up","Blind box","Season pass","Talent agency","Micro-lending"];
+const LISTS = [SECTORS, CUSTOMERS, MODELS];
+const $ = (id) => document.getElementById(id);
+const pick = (arr, not) => { let v; do { v = arr[Math.floor(Math.random()*arr.length)]; } while (arr.length > 1 && v === not); return v; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const LOCK_OPEN = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>';
+const LOCK_SHUT = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+
+let current = ["Neuroscience","Cowboys","Fund"];
+const held = [false,false,false];
+let spinning = false;
+
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
+
+/* ---------- Reels ---------- */
+function rh() { return $("strip-0").querySelector(".cell")?.offsetHeight || 72; }
+function winH(i) { return $("win-"+i).clientHeight; }
+function offsetFor(i, idx) { return -(idx * rh()) + (winH(i) - rh()) / 2; }
+function rest(i, word) {
+  const s = $("strip-"+i);
+  s.style.transition = "none";
+  s.innerHTML = [pick(LISTS[i], word), word, pick(LISTS[i], word)].map((w,k) => `<div class="cell${k===1?" on":""}">${esc(w)}</div>`).join("");
+  s.style.transform = `translateY(${offsetFor(i,1)}px)`;
+}
+function article(w) { return /^[aeiou]/i.test(w) ? "An" : "A"; }
+function renderSentence() {
+  const m = current[2].toLowerCase(), c = current[1].toLowerCase(), s = current[0].toLowerCase();
+  $("sentence").innerHTML = `${article(m)} ${esc(m)} <span>for</span> ${esc(c)} <span>in</span> ${esc(s)}.`;
+}
+function paintHold(i) { const b = $("lock-"+i); b.setAttribute("aria-pressed", held[i]); b.innerHTML = held[i] ? LOCK_SHUT : LOCK_OPEN; }
+current.forEach((w,i) => { rest(i,w); paintHold(i); }); renderSentence();
+addEventListener("resize", () => { if (!spinning) current.forEach((w,i) => rest(i,w)); });
+document.fonts && document.fonts.ready.then(() => { if (!spinning) current.forEach((w,i) => rest(i,w)); });
+
+function spin() {
+  if (spinning) return;
+  if (held.every(Boolean)) { toast("Release a reel to spin"); return; }
+  spinning = true; $("pull").disabled = true;
+  const next = current.map((w,i) => held[i] ? w : pick(LISTS[i], w));
+  let pending = 0;
+  next.forEach((word, i) => {
+    if (held[i]) return;
+    pending++;
+    const s = $("strip-"+i), h = rh();
+    const n = reduce ? 2 : 18 + i*8;
+    const words = [s.children[0]?.textContent || pick(LISTS[i]), current[i]];
+    for (let k=0;k<n;k++) words.push(pick(LISTS[i]));
+    words.push(word, pick(LISTS[i], word));
+    s.style.transition = "none";
+    s.innerHTML = words.map(w => `<div class="cell">${esc(w)}</div>`).join("");
+    s.style.transform = `translateY(${offsetFor(i,1)}px)`;
+    void s.offsetHeight;
+    $("win-"+i).classList.add("moving");
+    const dur = reduce ? 200 : 1300 + i*420;
+    s.style.transition = `transform ${dur}ms cubic-bezier(.2,.7,.15,1)`;
+    s.style.transform = `translateY(${offsetFor(i, words.length-2)}px)`;
+    setTimeout(() => $("win-"+i).classList.remove("moving"), dur*0.7);
+    setTimeout(() => { s.style.transition = "none"; [...s.children].forEach((c,k) => c.classList.toggle("on", k === words.length-2)); if (--pending === 0) done(); }, dur + 20);
+  });
+  function done() {
+    current = next; renderSentence();
+    spinning = false; $("pull").disabled = false;
+    if (!clock.running) resetClock();
+  }
+}
+$("pull").addEventListener("click", spin);
+document.addEventListener("keydown", (e) => {
+  if (e.code !== "Space") return;
+  const t = e.target; if (t && /^(INPUT|TEXTAREA|BUTTON)$/.test(t.tagName)) return;
+  if ($("view-spin").hidden) return;
+  e.preventDefault(); spin();
+});
+[0,1,2].forEach(i => $("lock-"+i).addEventListener("click", () => { held[i] = !held[i]; paintHold(i); }));
+
+/* ---------- Clock ---------- */
+const FULL = 30*60*1000;
+const clock = { remaining: FULL, running: false, endAt: 0, tick: null, warned: false };
+function fmt(ms) { const s = Math.max(0, Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function paintClock(note) {
+  const r = clock.remaining;
+  $("time").innerHTML = `<b>${fmt(r)}</b>${note ? " · " + esc(note) : ""}`;
+  $("fill").style.transform = `scaleX(${Math.max(0, r/FULL)})`;
+  $("clock").classList.toggle("warn", r <= 5*60*1000 && r > 0);
+  $("clock").classList.toggle("done", r <= 0);
+  $("clock-pause").disabled = !clock.running;
+  const b = $("clock-start");
+  b.textContent = clock.running ? "Running" : r <= 0 ? "Time" : r < FULL ? "Resume" : "Start 30:00";
+  b.disabled = clock.running || r <= 0;
+}
+function beep(times) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (let k=0;k<times;k++) {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = 660;
+      o.connect(g); g.connect(ctx.destination);
+      const t0 = ctx.currentTime + k*0.4;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.6);
+      o.start(t0); o.stop(t0+0.65);
+    }
+  } catch {}
+}
+let note = "";
+function startClock() {
+  if (clock.running || clock.remaining <= 0) return;
+  if (clock.remaining === FULL) logCombo();
+  clock.running = true; clock.endAt = Date.now() + clock.remaining; note = "";
+  clock.tick = setInterval(() => {
+    clock.remaining = clock.endAt - Date.now();
+    if (!clock.warned && clock.remaining <= 5*60*1000) { clock.warned = true; beep(1); note = "five minutes"; }
+    if (clock.remaining <= 0) { clock.remaining = 0; stopTick(); beep(3); note = "pitch it"; }
+    paintClock(note);
+  }, 250);
+  paintClock();
+}
+function stopTick() { clearInterval(clock.tick); clock.running = false; }
+function pauseClock() { if (!clock.running) return; clock.remaining = clock.endAt - Date.now(); stopTick(); paintClock("paused"); }
+function resetClock() { stopTick(); clock.remaining = FULL; clock.warned = false; note = ""; paintClock(); }
+$("clock-start").addEventListener("click", startClock);
+$("clock-pause").addEventListener("click", pauseClock);
+$("clock-reset").addEventListener("click", resetClock);
+paintClock();
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
+  ["spin","log","board"].forEach(v => $("view-"+v).hidden = v !== b.dataset.tab);
+  if (b.dataset.tab === "spin") current.forEach((w,i) => rest(i,w));
+}));
+
+/* ---------- Data layer (Vercel API) ---------- */
+const LS_LOG = "pitch-slots-log", LS_ID = "pitch-slots-client", LS_NAME = "pitch-slots-name";
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+let clientId = lsGet(LS_ID, "");
+if (!/^[a-z0-9]{16,40}$/.test(clientId)) { clientId = (newId() + newId()).slice(0, 32); lsSet(LS_ID, clientId); }
+let spins = (() => { try { return JSON.parse(lsGet(LS_LOG, "[]")) || []; } catch { return []; } })();
+let pitches = [], sortMode = "top", online = false;
+const saveLog = () => lsSet(LS_LOG, JSON.stringify(spins));
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { "content-type": "application/json", "x-client-id": clientId, ...(opts.headers || {}) } });
+  let data = null; try { data = await res.json(); } catch {}
+  if (!res.ok) { const err = new Error((data && data.error) || "Request failed"); err.status = res.status; throw err; }
+  return data;
+}
+
+function logCombo() {
+  spins.unshift({ id: newId(), sector: current[0], customer: current[1], model: current[2], createdAt: new Date().toISOString(), title: "", oneLiner: "", deckUrl: "", deckName: "", deckLink: "", posted: false });
+  saveLog(); renderLog();
+}
+function saveEntry(entry) { const i = spins.findIndex(s => s.id === entry.id); if (i >= 0) spins[i] = entry; saveLog(); renderLog(); }
+function myName() { return ($("my-name") ? $("my-name").value : lsGet(LS_NAME, "")).trim(); }
+
+async function postEntry(entry) {
+  if (!entry.title.trim()) { toast("Name the company before posting"); return; }
+  if (!myName()) { toast("Add your name at the top first"); $("my-name").focus(); return; }
+  await api("/api/pitches", { method: "POST", body: JSON.stringify({ id: entry.id, title: entry.title, oneLiner: entry.oneLiner, sector: entry.sector, customer: entry.customer, model: entry.model, name: myName(), deckUrl: entry.deckUrl, deckName: entry.deckName, deckLink: entry.deckLink }) });
+  entry.posted = true; saveEntry(entry); toast("Posted"); loadBoard();
+}
+async function unpostEntry(entry) {
+  await api("/api/pitches?id=" + encodeURIComponent(entry.id), { method: "DELETE" });
+  entry.posted = false; saveEntry(entry); toast("Taken down"); loadBoard();
+}
+async function deleteEntry(entry) {
+  if (entry.posted) { try { await api("/api/pitches?id=" + encodeURIComponent(entry.id), { method: "DELETE" }); } catch {} }
+  spins = spins.filter(s => s.id !== entry.id); saveLog(); renderLog(); loadBoard();
+}
+async function toggleVote(pitchId) {
+  const p = pitches.find(x => x.id === pitchId); if (!p) return;
+  p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard();
+  try { const r = await api("/api/vote", { method: "POST", body: JSON.stringify({ id: pitchId }) }); p.voted = r.voted; p.votes = r.votes; renderBoard(); }
+  catch (e) { p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard(); toast("Vote didn't go through"); }
+}
+let blobClient = null;
+async function uploadDeck(file, entryId) {
+  if (!blobClient) blobClient = await import("https://esm.sh/@vercel/blob@2.8.0/client");
+  const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "deck.pdf";
+  return blobClient.upload(`decks/${entryId}-${safe}`, file, { access: "public", handleUploadUrl: "/api/upload", contentType: file.type || "application/pdf" });
+}
+
+/* ---------- Render: log ---------- */
+const dateFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
+function deckLinkHtml(e) {
+  const parts = [];
+  if (safeUrl(e.deckUrl)) parts.push(`<a href="${esc(e.deckUrl)}" target="_blank" rel="noopener noreferrer">${esc(e.deckName || "Deck (PDF)")}</a>`);
+  if (safeUrl(e.deckLink)) parts.push(`<a href="${esc(e.deckLink)}" target="_blank" rel="noopener noreferrer">Deck link</a>`);
+  return parts.join(" · ");
+}
+function comboHtml(e) { return `<div class="combo">${esc(e.sector)}<i>×</i>${esc(e.customer)}<i>×</i>${esc(e.model)}</div>`; }
+
+function renderLog() {
+  const list = $("log-list");
+  if (!spins.length) { list.innerHTML = `<div class="empty">Nothing yet. Spin, then start the clock.</div>`; return; }
+  const focusedId = document.activeElement && document.activeElement.id;
+  const drafts = {}; list.querySelectorAll("input[type=text], input[type=url], textarea").forEach(el => { if (el.id) drafts[el.id] = el.value; });
+  list.innerHTML = spins.map(e => { const id = esc(e.id); return `
+    <article class="item" data-id="${id}">
+      ${comboHtml(e)}
+      <div class="meta"><span class="dot ${e.posted ? "on" : ""}"></span>${e.posted ? "Posted" : "Draft"}<span>·</span>${esc(dateFmt.format(new Date(e.createdAt)))}</div>
+      <div class="fields">
+        <input type="text" id="t-${id}" value="${esc(e.title)}" placeholder="Company name" aria-label="Company name" maxlength="80">
+        <textarea id="o-${id}" placeholder="One-line pitch" aria-label="One-line pitch" maxlength="280">${esc(e.oneLiner)}</textarea>
+        <input type="url" id="l-${id}" value="${esc(e.deckLink)}" placeholder="Deck link (optional)" aria-label="Deck link">
+      </div>
+      <div class="actions">
+        <button class="small-btn" data-act="save">Save</button>
+        ${online ? `<button class="link" data-act="post">${e.posted ? "Update post" : "Post to leaderboard"}</button>` : ""}
+        ${online && e.posted ? `<button class="link" data-act="unpost">Take down</button>` : ""}
+        ${online ? `<label class="link upload" for="f-${id}">Upload PDF<input type="file" id="f-${id}" accept="application/pdf,image/png,image/jpeg" hidden></label>` : ""}
+        <span class="deck meta" id="d-${id}">${deckLinkHtml(e)}</span>
+        <button class="link danger" data-act="delete" style="margin-left:auto">Delete</button>
+      </div>
+    </article>`; }).join("");
+  for (const k in drafts) { const el = $(k); if (el) el.value = drafts[k]; }
+  if (focusedId && $(focusedId)) $(focusedId).focus();
+}
+function readForm(e) { return { ...e, title: $("t-"+e.id).value, oneLiner: $("o-"+e.id).value, deckLink: ($("l-"+e.id).value || "").trim() }; }
+$("log-list").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest("button[data-act]"); if (!btn) return;
+  const card = btn.closest(".item"); const e0 = spins.find(s => s.id === card.dataset.id); if (!e0) return;
+  const e = readForm(e0);
+  if (e.deckLink && !/^https?:\/\//i.test(e.deckLink)) { toast("Deck link should start with https://"); return; }
+  btn.disabled = true;
+  try {
+    if (btn.dataset.act === "save") { saveEntry(e); toast("Saved"); if (e.posted && online) await postEntry(e); }
+    if (btn.dataset.act === "post") await postEntry(e);
+    if (btn.dataset.act === "unpost") await unpostEntry(e);
+    if (btn.dataset.act === "delete") {
+      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "Tap again to delete"; btn.disabled = false; return; }
+      await deleteEntry(e); toast("Deleted");
+    }
+  } catch (err) { toast(err.status === 429 ? "Slow down a little and try again" : "Couldn't reach the leaderboard. Try again."); }
+  btn.disabled = false;
+});
+$("log-list").addEventListener("change", async (ev) => {
+  const input = ev.target; if (input.type !== "file" || !input.files[0]) return;
+  const card = input.closest(".item"); const e0 = spins.find(s => s.id === card.dataset.id); if (!e0) return;
+  const file = input.files[0];
+  if (!/^(application\/pdf|image\/(png|jpeg))$/.test(file.type || "application/pdf")) { toast("Export your deck as a PDF first"); return; }
+  if (file.size > 25*1024*1024) { toast("Keep the deck under 25 MB"); return; }
+  $("d-"+e0.id).textContent = "Uploading…";
+  try {
+    const blob = await uploadDeck(file, e0.id);
+    const e = readForm(e0); e.deckUrl = blob.url; e.deckName = file.name;
+    saveEntry(e); if (e.posted) await postEntry(e);
+    toast("Deck attached");
+  } catch (err) { $("d-"+e0.id).textContent = "Upload failed"; }
+});
+
+/* ---------- Render: leaderboard ---------- */
+function renderBoard() {
+  const list = $("board-list");
+  if (!online) { list.innerHTML = `<div class="empty">The shared leaderboard is not connected yet.</div>`; return; }
+  if (!pitches.length) { list.innerHTML = `<div class="empty">No pitches yet. Post one from your log.</div>`; return; }
+  const rows = [...pitches];
+  rows.sort(sortMode === "top" ? (a,b) => b.votes - a.votes || String(b.postedAt).localeCompare(a.postedAt) : (a,b) => String(b.postedAt).localeCompare(a.postedAt));
+  list.innerHTML = rows.map((p, i) => `
+    <article class="item lb">
+      <div class="rank">${i+1}</div>
+      <div style="min-width:0">
+        <h3>${esc(p.title || "Untitled")}</h3>
+        ${comboHtml(p)}
+        ${p.oneLiner ? `<p>${esc(p.oneLiner)}</p>` : ""}
+        <div class="meta" style="margin-top:10px"><span>${esc(p.name || "Someone")}</span><span>·</span>${esc(dateFmt.format(new Date(p.postedAt)))}${deckLinkHtml(p) ? "<span>·</span>" + deckLinkHtml(p) : ""}</div>
+      </div>
+      <button class="vote" data-vote="${esc(p.id)}" aria-pressed="${!!p.voted}" ${p.mine ? "disabled" : ""} aria-label="Upvote ${esc(p.title)}" title="${p.mine ? "Your pitch" : "I would fund this"}">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>${p.votes}
+      </button>
+    </article>`).join("");
+}
+$("board-list").addEventListener("click", (ev) => { const b = ev.target.closest("[data-vote]"); if (b && !b.disabled) toggleVote(b.dataset.vote); });
+function setSort(m) { sortMode = m; $("sort-top").style.color = m === "top" ? "var(--ink)" : ""; $("sort-new").style.color = m === "new" ? "var(--ink)" : ""; $("sort-top").setAttribute("aria-pressed", m==="top"); $("sort-new").setAttribute("aria-pressed", m==="new"); renderBoard(); }
+$("sort-top").addEventListener("click", () => setSort("top"));
+$("sort-new").addEventListener("click", () => setSort("new"));
+
+async function loadBoard() {
+  try { const r = await api("/api/pitches"); pitches = r.pitches || []; if (!online) { online = true; renderLog(); } }
+  catch (e) { if (e.status === 503 || e.status === 404 || !e.status) online = false; }
+  renderBoard();
+}
+
+/* ---------- Boot ---------- */
+$("my-name").value = lsGet(LS_NAME, "");
+$("my-name").addEventListener("input", () => lsSet(LS_NAME, $("my-name").value.trim()));
+renderLog();
+$("board-list").innerHTML = `<div class="empty">Loading…</div>`;
+loadBoard();
+setInterval(() => { if (!document.hidden && !$("view-board").hidden) loadBoard(); }, 20000);
+document.querySelector('[data-tab="board"]').addEventListener("click", loadBoard);
+})();
+</script>
+
+</body>
+</html>
