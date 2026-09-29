@@ -8,26 +8,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one quiet centered stage. Three porcelain windows, one sentence, one button, one thin clock line. Log and leaderboard sit behind text tabs. */
+/* Layout: one quiet centered stage. Reels, one sentence, one clock, then your pitch card. Leaderboard is a gallery of first slides. */
 :root {
-  --bg: #eef0f3;
-  --surface: #ffffff;
-  --ink: #161a23;
-  --muted: #7a8190;
-  --hair: #dde1e7;
-  --accent: #2f4ad8;
-  --accent-ink: #ffffff;
+  --bg: #eef0f3; --surface: #ffffff; --ink: #161a23; --muted: #7a8190; --hair: #dde1e7;
+  --accent: #2f4ad8; --accent-ink: #ffffff; --accent-soft: rgba(47,74,216,.08);
   --shadow: 0 1px 2px rgba(22,26,35,.04), 0 12px 32px -12px rgba(22,26,35,.14);
   --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --sans: "Geist", "Helvetica Neue", Arial, sans-serif;
   --mono: "Geist Mono", ui-monospace, Menlo, monospace;
-  --rh: 84px;
+  --rh: 76px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116;
+  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116; --accent-soft: rgba(128,152,255,.1);
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6); color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116;
+  --bg: #0f1116; --surface: #181b22; --ink: #eceef2; --muted: #8a909c; --hair: #262a33; --accent: #8098ff; --accent-ink: #0f1116; --accent-soft: rgba(128,152,255,.1);
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6); color-scheme: dark; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -39,101 +34,129 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 nav { display: flex; gap: 22px; }
 nav button { background: none; border: 0; padding: 4px 0; font: 500 13px var(--sans); color: var(--muted); cursor: pointer; border-bottom: 1px solid transparent; }
 nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, label.upload:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* Stage */
-.stage { display: grid; justify-items: center; gap: 36px; padding-block: clamp(40px, 9vh, 96px) 24px; }
+.stage { display: grid; justify-items: center; gap: 20px; padding-block: clamp(40px, 8vh, 88px) 8px; }
 .reels { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 640px) { .reels { grid-template-columns: minmax(0,1fr); gap: 14px; } .window { height: calc(var(--rh) * 1.7); } .hint { display: none; } .stage { padding-block: 28px 16px; gap: 28px; } }
 .reel { display: grid; gap: 12px; min-width: 0; }
 .reel-top { display: flex; justify-content: space-between; align-items: center; padding-inline: 4px; }
 .label { font: 500 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.hold { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--hair); background: transparent; color: var(--muted); cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.hold { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--hair); background: transparent; color: var(--muted); cursor: pointer; transition: background .2s, color .2s; }
 .hold svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 .hold[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.window {
-  position: relative; height: calc(var(--rh) * 2.4); overflow: hidden;
-  background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
-          mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
-}
+.hold:disabled { opacity: .35; cursor: default; }
+.window { position: relative; height: calc(var(--rh) * 2.2); overflow: hidden; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%); }
 .strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
 .cell { height: var(--rh); display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 18px; font: 400 clamp(26px, 3.4vw, 34px)/1.05 var(--serif); letter-spacing: -.01em; text-wrap: balance; overflow-wrap: anywhere; color: var(--muted); opacity: .45; }
 .cell.on { color: var(--ink); opacity: 1; }
 .moving .cell { color: var(--ink); opacity: .9; }
 .moving .strip { filter: blur(1.2px); }
-.sentence { font: italic 400 clamp(22px, 3vw, 30px)/1.25 var(--serif); text-align: center; text-wrap: balance; max-width: 30ch; min-height: 2.5em; color: var(--ink); }
+.sentence { font: italic 400 clamp(20px, 2.6vw, 26px)/1.25 var(--serif); text-align: center; text-wrap: balance; max-width: 34ch; }
 .sentence span { color: var(--muted); }
-.controls { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; }
-.spin { font: 500 15px var(--sans); letter-spacing: .02em; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 999px; padding: 15px 44px; cursor: pointer; transition: transform .15s, opacity .2s; }
-.spin:hover { transform: translateY(-1px); }
-.spin:active { transform: translateY(1px); }
-.spin:disabled { opacity: .55; cursor: default; transform: none; }
-.ghost { font: 500 14px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--hair); border-radius: 999px; padding: 14px 24px; cursor: pointer; font-variant-numeric: tabular-nums; }
-.ghost:disabled { color: var(--muted); cursor: default; }
-.clock { width: min(420px, 100%); display: grid; gap: 10px; justify-items: center; }
-.time { font: 400 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
-.time b { font-weight: 500; color: var(--ink); }
+
+/* Clock */
+.spin-wrap { display: grid; justify-items: center; gap: 8px; }
+.btn.spin-main { font-size: 18px; padding: 16px 76px; box-shadow: 0 10px 24px -10px var(--accent); }
+.clock { display: grid; justify-items: center; gap: 10px; width: min(560px, 100%); margin-top: 4px; padding-top: 22px; border-top: 1px solid var(--hair); }
+.digits { font: 400 clamp(56px, 8vw, 76px)/1 var(--serif); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.clock.idle .digits { color: var(--muted); }
+.clock.warn .digits, .clock.done .digits { color: var(--accent); }
 .bar { width: 100%; height: 2px; background: var(--hair); border-radius: 2px; overflow: hidden; }
 .fill { height: 100%; width: 100%; background: var(--ink); transform-origin: left; transition: transform .25s linear; }
 .clock.warn .fill { background: var(--accent); }
-.clock.done .time b { color: var(--accent); }
-.clock-links { display: flex; gap: 18px; }
-.link { background: none; border: 0; padding: 0; font: 500 12px var(--sans); color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair); }
+.status { font: 400 13px var(--sans); color: var(--muted); text-align: center; min-height: 1.5em; }
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.btn { font: 500 15px var(--sans); border-radius: 999px; padding: 14px 30px; cursor: pointer; border: 1px solid var(--hair); background: transparent; color: var(--ink); transition: transform .15s, opacity .2s, background .2s; display: inline-flex; align-items: center; gap: 10px; }
+.btn svg { width: 14px; height: 14px; fill: currentColor; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.dark { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+.link { background: none; border: 0; padding: 0; font: 500 13px var(--sans); color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair); }
 .link:hover { color: var(--ink); }
-.link:disabled { opacity: .4; cursor: default; }
+.danger { color: #c2493a; }
+
+/* Pitch card */
+.pitch { width: min(560px, 100%); background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); padding: 24px; display: grid; gap: 14px; }
+.pitch h2 { margin: 0; font: italic 400 26px/1.1 var(--serif); }
+.pitch .sub { margin: -8px 0 0; color: var(--muted); font-size: 13px; }
+.field { display: grid; gap: 6px; }
+.field > span { font: 500 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+input[type=text], textarea { width: 100%; min-width: 0; font: 400 15px var(--sans); color: var(--ink); background: var(--bg); border: 1px solid transparent; border-radius: 12px; padding: 12px 14px; }
+input[type=text]:focus, textarea:focus { border-color: var(--hair); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+textarea { resize: vertical; min-height: 64px; }
+.drop { position: relative; display: grid; place-items: center; gap: 6px; text-align: center; aspect-ratio: 16 / 9; max-width: 100%; border: 1.5px dashed var(--hair); border-radius: 14px; background: var(--bg); color: var(--muted); cursor: pointer; overflow: hidden; padding: 16px; transition: border-color .2s, background .2s; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop b { color: var(--ink); font-weight: 500; }
+.drop svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--surface); }
+.drop .replace { position: absolute; right: 10px; bottom: 10px; background: var(--ink); color: var(--bg); font: 500 12px var(--sans); padding: 6px 12px; border-radius: 999px; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.posted { display: inline-flex; align-items: center; gap: 8px; font: 500 13px var(--sans); color: var(--accent); }
+.posted::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .hint { font-size: 12px; color: var(--muted); }
 .hint kbd { font: 400 11px var(--mono); border: 1px solid var(--hair); border-radius: 5px; padding: 1px 6px; }
 
 /* Lists */
-.panel { padding-block: 48px 0; display: grid; gap: 28px; max-width: 720px; margin: 0 auto; }
+.panel { padding-block: 48px 0; display: grid; gap: 28px; }
 .panel-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
 .panel-head h2 { margin: 0; font: italic 400 34px/1.1 var(--serif); }
 .panel-head p { margin: 4px 0 0; color: var(--muted); }
-.list { display: grid; }
-.item { padding-block: 24px; border-top: 1px solid var(--hair); display: grid; gap: 14px; min-width: 0; }
-.item:last-child { border-bottom: 1px solid var(--hair); }
-.combo { font: 400 22px/1.2 var(--serif); overflow-wrap: anywhere; }
-.combo i { color: var(--muted); font-style: normal; padding-inline: 6px; }
-.meta { font: 400 12px var(--mono); color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hair); display: inline-block; }
-.dot.on { background: var(--accent); }
-.fields { display: grid; gap: 10px; }
-input[type=text], input[type=url], textarea { width: 100%; min-width: 0; font: 400 14px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 11px 14px; }
-input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
-textarea { resize: vertical; min-height: 64px; }
-.actions { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
-.small-btn { font: 500 13px var(--sans); color: var(--accent-ink); background: var(--ink); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
-.small-btn:disabled { opacity: .5; }
-.danger { color: #c2493a; text-decoration-color: currentColor; }
-.upload { cursor: pointer; }
-.deck a, .lb a { color: var(--ink); text-underline-offset: 3px; }
+.log-list { display: grid; gap: 20px; justify-items: center; }
+.log-list .pitch { width: min(560px, 100%); }
+.combo-line { font: 400 20px/1.2 var(--serif); overflow-wrap: anywhere; }
+.combo-line i { color: var(--muted); font-style: normal; padding-inline: 6px; }
+.meta { font: 400 12px var(--mono); color: var(--muted); }
 .empty { color: var(--muted); padding-block: 40px; text-align: center; font: italic 400 20px var(--serif); }
-.lb { grid-template-columns: 36px minmax(0,1fr) auto; align-items: start; column-gap: 18px; }
-.rank { font: 400 28px/1 var(--serif); color: var(--muted); font-variant-numeric: tabular-nums; }
-.lb h3 { margin: 0 0 4px; font: 400 26px/1.15 var(--serif); overflow-wrap: anywhere; }
-.lb .combo { font: 400 13px var(--sans); color: var(--muted); }
-.lb .combo i { padding-inline: 4px; }
-.lb p { margin: 8px 0 0; overflow-wrap: anywhere; }
+
+/* Gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 28px 22px; }
+.card { display: grid; gap: 12px; min-width: 0; }
+.slide { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.slide img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+.slide:hover img { transform: scale(1.03); }
+.slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,12,18,0) 45%, rgba(10,12,18,.28)); pointer-events: none; }
+.floaters { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.float { position: absolute; font: italic 400 15px/1 var(--serif); color: #161a23; background: rgba(255,255,255,.88); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 7px 12px; border-radius: 999px; box-shadow: 0 6px 18px -6px rgba(0,0,0,.35); white-space: nowrap; max-width: 70%; overflow: hidden; text-overflow: ellipsis; animation: drift 7s ease-in-out infinite; }
+.float.a { left: 5%; top: 8%; animation-duration: 6.5s; }
+.float.b { right: 5%; top: 8%; animation-duration: 8s; animation-delay: -2s; }
+.float.c { right: 8%; bottom: 9%; animation-duration: 7.2s; animation-delay: -4s; }
+.float { max-width: 44%; }
+@keyframes drift { 0%,100% { transform: translate(0,0) rotate(-1deg); } 50% { transform: translate(6px,-8px) rotate(1deg); } }
+.card-body { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: start; }
+.card h3 { margin: 0; font: 400 24px/1.1 var(--serif); overflow-wrap: anywhere; }
+.card p { margin: 4px 0 0; color: var(--ink); overflow-wrap: anywhere; }
+.card .meta { margin-top: 6px; }
+.rank { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .08em; }
 .vote { display: grid; justify-items: center; gap: 2px; min-width: 52px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--hair); background: transparent; color: var(--ink); cursor: pointer; font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
 .vote svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .vote[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .vote:disabled { opacity: .5; cursor: default; }
 .seg { display: flex; gap: 18px; }
-.notice { font-size: 13px; color: var(--muted); }
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 500 13px var(--sans); padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); }
-@media (prefers-reduced-motion: reduce) { .moving .strip { filter: none; } .fill { transition: none; } }
+.seg .link[aria-pressed="true"] { color: var(--ink); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 500 13px var(--sans); padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); z-index: 10; }
+@media (max-width: 640px) {
+  .reels { grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .window { height: calc(var(--rh) * 1.7); }
+  .hint { display: none; }
+  .stage { padding-block: 36px 8px; gap: 18px; }
+  .pitch { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .moving .strip { filter: none; } .fill { transition: none; } .float { animation: none; } }
 </style>
 </head>
 <body>
-
 <div class="wrap">
   <header>
     <div class="mark">Pitch Slots</div>
     <nav role="tablist" aria-label="Sections">
-      <button role="tab" id="tab-spin" aria-selected="true" data-tab="spin">Spin</button>
-      <button role="tab" id="tab-log" aria-selected="false" data-tab="log">Log</button>
-      <button role="tab" id="tab-board" aria-selected="false" data-tab="board">Leaderboard</button>
+      <button role="tab" aria-selected="true" data-tab="spin">Spin</button>
+      <button role="tab" aria-selected="false" data-tab="log">My pitches</button>
+      <button role="tab" aria-selected="false" data-tab="board">Leaderboard</button>
     </nav>
   </header>
 
@@ -144,37 +167,34 @@ textarea { resize: vertical; min-height: 64px; }
       <div class="reel"><div class="reel-top"><span class="label">Model</span><button class="hold" id="lock-2" aria-pressed="false" aria-label="Hold business model"></button></div><div class="window" id="win-2"><div class="strip" id="strip-2"></div></div></div>
     </div>
     <div class="sentence" id="sentence" aria-live="polite"></div>
-    <div class="controls">
-      <button class="spin" id="pull">Spin</button>
-      <button class="ghost" id="clock-start">Start 30:00</button>
+    <div class="spin-wrap"><button class="btn primary spin-main" id="b-spin">Spin</button><div class="hint" id="hint"><kbd>Space</kbd> to spin</div></div>
+
+    <div class="clock idle" id="clock">
+      <div class="digits" id="digits">30:00</div>
+      <div class="bar" id="bar" hidden><div class="fill" id="fill"></div></div>
+      <div class="status" id="status">Spin until you like the combo. Then start the clock.</div>
+      <div class="buttons" id="buttons"></div>
     </div>
-    <div class="clock" id="clock">
-      <div class="bar"><div class="fill" id="fill"></div></div>
-      <div class="time" id="time"><b>30:00</b></div>
-      <div class="clock-links">
-        <button class="link" id="clock-pause" disabled>Pause</button>
-        <button class="link" id="clock-reset">Reset</button>
-      </div>
-    </div>
-    <div class="hint"><kbd>Space</kbd> to spin</div>
-  </section>
+
+    <div id="current-slot"></div>
+      </section>
 
   <section id="view-log" class="panel" hidden>
-    <div class="panel-head"><div><h2>Log</h2><p>Every combo you put on the clock. Saved in this browser.</p></div>
-      <input type="text" id="my-name" placeholder="Your name for the leaderboard" aria-label="Your name for the leaderboard" maxlength="40" style="max-width:260px"></div>
-    <div class="list" id="log-list"></div>
+    <div class="panel-head"><div><h2>My pitches</h2><p>Every combo you put on the clock. Saved in this browser.</p></div></div>
+    <div class="log-list" id="log-list"></div>
   </section>
 
   <section id="view-board" class="panel" hidden>
     <div class="panel-head">
-      <div><h2>Leaderboard</h2><p>Upvote the ones you would fund.</p></div>
-      <div class="seg"><button class="link" id="sort-top" aria-pressed="true" style="color:var(--ink)">Top</button><button class="link" id="sort-new" aria-pressed="false">Newest</button></div>
+      <div><h2>Leaderboard</h2><p>Tap a slide to open the deck. Upvote the ones you would fund.</p></div>
+      <div class="seg"><button class="link" id="sort-top" aria-pressed="true">Top</button><button class="link" id="sort-new" aria-pressed="false">Newest</button></div>
     </div>
-    <div class="list" id="board-list"></div>
+    <div class="gallery" id="board-list"></div>
   </section>
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 (() => {
 const SECTORS = ["Neuroscience","Insurance","Beekeeping","Quantum computing","Funeral services","Luxury yachts","Dairy farming","Space tourism","Dentistry","Fermentation","Opera","Pet psychology","Cybersecurity","Wedding planning","Nuclear energy","Tattoos","Sleep science","Archaeology","Plumbing","Perfume","Esports","Genomics","Ice sculpture","Carbon capture","Taxidermy","Sushi","Satellite imaging","Hot springs","Karaoke","Robotics","Container shipping","Violin making","Mushroom foraging","Real estate","Stage magic","Pharmaceuticals","Parking","Wine","Legal services","Deep-sea mining","Calligraphy","Weather forecasting","Circus arts","Composting","Watchmaking","Aviation","Origami","Longevity","Translation","Cheese","Laundry","Drones","Chess","Vertical farming","Sneakers","Mattresses","Bridge building","Snow removal","Pickleball","Hydrogen fuel","Voice acting","Stand-up comedy","Stationery","Elevators","Lighthouses","Air quality","Bonsai","Ramen","Hearing aids","Horse racing","Crossword puzzles","Firefighting gear","Vending machines","Glassblowing","Ghost tours"];
@@ -185,45 +205,71 @@ const $ = (id) => document.getElementById(id);
 const pick = (arr, not) => { let v; do { v = arr[Math.floor(Math.random()*arr.length)]; } while (arr.length > 1 && v === not); return v; };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const LOCK_OPEN = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>';
-const LOCK_SHUT = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+const ICON = {
+  open: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>',
+  shut: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>',
+  play: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>',
+  pause: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
+  up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>'
+};
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2400); }
 
-let current = ["Neuroscience","Cowboys","Fund"];
+/* ---------- Local state ---------- */
+const LS = { log: "pitch-slots-log", id: "pitch-slots-client", name: "pitch-slots-name", clock: "pitch-slots-clock", draft: "pitch-slots-draft" };
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+let clientId = lsGet(LS.id, "");
+if (!/^[a-z0-9]{16,40}$/.test(clientId)) { clientId = (newId() + newId()).slice(0, 32); lsSet(LS.id, clientId); }
+let spins = (() => { try { return JSON.parse(lsGet(LS.log, "[]")) || []; } catch { return []; } })();
+const saveLog = () => lsSet(LS.log, JSON.stringify(spins));
+const FULL = 30*60*1000;
+// clock: { entryId, remaining, endAt, running }
+let clock = (() => { try { return JSON.parse(lsGet(LS.clock, "null")); } catch { return null; } })();
+const saveClock = () => lsSet(LS.clock, JSON.stringify(clock));
+let draftId = lsGet(LS.draft, "");
+const setDraft = (id) => { draftId = id || ""; lsSet(LS.draft, draftId); };
+const clockEntry = () => clock && spins.find(s => s.id === clock.entryId);
+const activeEntry = () => clockEntry() || (draftId && spins.find(s => s.id === draftId)) || null;
+const hasContent = (e) => !!(e && (e.title.trim() || e.oneLiner.trim() || e.deckUrl));
+function newEntry() { return { id: newId(), sector: current[0], customer: current[1], model: current[2], createdAt: new Date().toISOString(), title: "", oneLiner: "", deckUrl: "", deckName: "", thumbUrl: "", posted: false }; }
+// The card before any typing is a blank placeholder; it becomes a saved draft on first input.
+function materialize() { const e = newEntry(); spins.unshift(e); saveLog(); setDraft(e.id); return e; }
+
+let current = activeEntry() ? [activeEntry().sector, activeEntry().customer, activeEntry().model] : ["Neuroscience","Cowboys","Fund"];
 const held = [false,false,false];
 let spinning = false;
 
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
-
 /* ---------- Reels ---------- */
-function rh() { return $("strip-0").querySelector(".cell")?.offsetHeight || 72; }
-function winH(i) { return $("win-"+i).clientHeight; }
-function offsetFor(i, idx) { return -(idx * rh()) + (winH(i) - rh()) / 2; }
+function rh() { return $("strip-0").querySelector(".cell")?.offsetHeight || 84; }
+function offsetFor(i, idx) { return -(idx * rh()) + ($("win-"+i).clientHeight - rh()) / 2; }
 function rest(i, word) {
-  const s = $("strip-"+i);
-  s.style.transition = "none";
+  const s = $("strip-"+i); s.style.transition = "none";
   s.innerHTML = [pick(LISTS[i], word), word, pick(LISTS[i], word)].map((w,k) => `<div class="cell${k===1?" on":""}">${esc(w)}</div>`).join("");
   s.style.transform = `translateY(${offsetFor(i,1)}px)`;
 }
-function article(w) { return /^[aeiou]/i.test(w) ? "An" : "A"; }
+const article = (w) => /^[aeiou]/i.test(w) ? "An" : "A";
 function renderSentence() {
-  const m = current[2].toLowerCase(), c = current[1].toLowerCase(), s = current[0].toLowerCase();
+  const [s, c, m] = current.map(x => x.toLowerCase());
   $("sentence").innerHTML = `${article(m)} ${esc(m)} <span>for</span> ${esc(c)} <span>in</span> ${esc(s)}.`;
 }
-function paintHold(i) { const b = $("lock-"+i); b.setAttribute("aria-pressed", held[i]); b.innerHTML = held[i] ? LOCK_SHUT : LOCK_OPEN; }
+function paintHold(i) { const b = $("lock-"+i); b.setAttribute("aria-pressed", held[i]); b.innerHTML = held[i] ? ICON.shut : ICON.open; b.disabled = !!(clock && clock.entryId); }
+const restAll = () => { if (!spinning) current.forEach((w,i) => rest(i,w)); };
 current.forEach((w,i) => { rest(i,w); paintHold(i); }); renderSentence();
-addEventListener("resize", () => { if (!spinning) current.forEach((w,i) => rest(i,w)); });
-document.fonts && document.fonts.ready.then(() => { if (!spinning) current.forEach((w,i) => rest(i,w)); });
+addEventListener("resize", restAll);
+document.fonts && document.fonts.ready.then(restAll);
 
 function spin() {
-  if (spinning) return;
+  if (spinning || (clock && clock.entryId)) return;
   if (held.every(Boolean)) { toast("Release a reel to spin"); return; }
-  spinning = true; $("pull").disabled = true;
+  spinning = true; paintClock();
   const next = current.map((w,i) => held[i] ? w : pick(LISTS[i], w));
   let pending = 0;
   next.forEach((word, i) => {
     if (held[i]) return;
     pending++;
-    const s = $("strip-"+i), h = rh();
+    const s = $("strip-"+i);
     const n = reduce ? 2 : 18 + i*8;
     const words = [s.children[0]?.textContent || pick(LISTS[i]), current[i]];
     for (let k=0;k<n;k++) words.push(pick(LISTS[i]));
@@ -237,242 +283,289 @@ function spin() {
     s.style.transition = `transform ${dur}ms cubic-bezier(.2,.7,.15,1)`;
     s.style.transform = `translateY(${offsetFor(i, words.length-2)}px)`;
     setTimeout(() => $("win-"+i).classList.remove("moving"), dur*0.7);
-    setTimeout(() => { s.style.transition = "none"; [...s.children].forEach((c,k) => c.classList.toggle("on", k === words.length-2)); if (--pending === 0) done(); }, dur + 20);
+    setTimeout(() => { s.style.transition = "none"; [...s.children].forEach((c,k) => c.classList.toggle("on", k === words.length-2)); if (--pending === 0) { current = next; renderSentence(); spinning = false; afterSpin(); paintClock(); } }, dur + 20);
   });
-  function done() {
-    current = next; renderSentence();
-    spinning = false; $("pull").disabled = false;
-    if (!clock.running) resetClock();
-  }
 }
-$("pull").addEventListener("click", spin);
 document.addEventListener("keydown", (e) => {
   if (e.code !== "Space") return;
   const t = e.target; if (t && /^(INPUT|TEXTAREA|BUTTON)$/.test(t.tagName)) return;
   if ($("view-spin").hidden) return;
   e.preventDefault(); spin();
 });
+$("b-spin").addEventListener("click", spin);
 [0,1,2].forEach(i => $("lock-"+i).addEventListener("click", () => { held[i] = !held[i]; paintHold(i); }));
 
 /* ---------- Clock ---------- */
-const FULL = 30*60*1000;
-const clock = { remaining: FULL, running: false, endAt: 0, tick: null, warned: false };
-function fmt(ms) { const s = Math.max(0, Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
-function paintClock(note) {
-  const r = clock.remaining;
-  $("time").innerHTML = `<b>${fmt(r)}</b>${note ? " · " + esc(note) : ""}`;
-  $("fill").style.transform = `scaleX(${Math.max(0, r/FULL)})`;
-  $("clock").classList.toggle("warn", r <= 5*60*1000 && r > 0);
-  $("clock").classList.toggle("done", r <= 0);
-  $("clock-pause").disabled = !clock.running;
-  const b = $("clock-start");
-  b.textContent = clock.running ? "Running" : r <= 0 ? "Time" : r < FULL ? "Resume" : "Start 30:00";
-  b.disabled = clock.running || r <= 0;
-}
+const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
+const remaining = () => !clock ? FULL : clock.running ? clock.endAt - Date.now() : clock.remaining;
+let tick = null, warned = false;
 function beep(times) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    for (let k=0;k<times;k++) {
-      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = 660;
-      o.connect(g); g.connect(ctx.destination);
-      const t0 = ctx.currentTime + k*0.4;
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.6);
-      o.start(t0); o.stop(t0+0.65);
-    }
-  } catch {}
+  try { const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (let k=0;k<times;k++) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 660; o.connect(g); g.connect(ctx.destination);
+      const t0 = ctx.currentTime + k*0.4; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.6); o.start(t0); o.stop(t0+0.65); } } catch {}
 }
-let note = "";
+function paintClock() {
+  const r = remaining(), el = $("clock");
+  const state = !clock ? "idle" : r <= 0 ? "done" : clock.running ? "running" : "paused";
+  $("digits").textContent = fmt(r);
+  $("bar").hidden = state === "idle";
+  $("fill").style.transform = `scaleX(${Math.max(0, r/FULL)})`;
+  el.className = "clock " + (state === "idle" ? "idle" : state === "done" ? "done" : r <= 5*60*1000 ? "warn" : "");
+  const B = $("buttons");
+  if (state === "idle") {
+    $("status").textContent = "Happy with the combo? Start the clock and build your deck.";
+    B.innerHTML = `<button class="btn dark" id="b-start" ${spinning ? "disabled" : ""}>${ICON.play}Start the clock</button>`;
+  } else if (state === "running") {
+    $("status").textContent = r <= 5*60*1000 ? "Five minutes left. Finish the deck." : "Build your deck. Submit it below when you are done.";
+    B.innerHTML = `<button class="btn" id="b-pause">${ICON.pause}Pause</button><button class="link" id="b-new">New combo</button>`;
+  } else if (state === "paused") {
+    $("status").textContent = "Paused.";
+    B.innerHTML = `<button class="btn primary" id="b-resume">${ICON.play}Resume</button><button class="link" id="b-new">New combo</button>`;
+  } else {
+    $("status").textContent = "Time. Upload your deck and post it below.";
+    B.innerHTML = `<button class="btn" id="b-new2">Start a new combo</button>`;
+  }
+  [0,1,2].forEach(paintHold);
+  $("b-spin").disabled = spinning || state !== "idle";
+  $("hint").hidden = state !== "idle";
+}
+$("buttons").addEventListener("click", (e) => {
+  const id = e.target.closest("button")?.id; if (!id) return;
+  if (id === "b-start") startClock();
+  if (id === "b-pause") { clock.remaining = clock.endAt - Date.now(); clock.running = false; saveClock(); stopTick(); paintClock(); }
+  if (id === "b-resume") { clock.endAt = Date.now() + clock.remaining; clock.running = true; saveClock(); runTick(); paintClock(); }
+  if (id === "b-new" || id === "b-new2") {
+    if (id === "b-new" && e.target.dataset.confirm !== "1") { e.target.dataset.confirm = "1"; e.target.textContent = "Tap again to stop the clock"; return; }
+    clock = null; saveClock(); stopTick(); warned = false; paintClock(); renderCurrent();
+  }
+});
+function afterSpin() {
+  const d = draftId && spins.find(s => s.id === draftId);
+  if (d) {
+    if (hasContent(d)) toast("Your draft is saved in My pitches");
+    else { spins = spins.filter(s => s.id !== d.id); saveLog(); }
+    setDraft("");
+  }
+  renderCurrent(); renderLog();
+}
 function startClock() {
-  if (clock.running || clock.remaining <= 0) return;
-  if (clock.remaining === FULL) logCombo();
-  clock.running = true; clock.endAt = Date.now() + clock.remaining; note = "";
-  clock.tick = setInterval(() => {
-    clock.remaining = clock.endAt - Date.now();
-    if (!clock.warned && clock.remaining <= 5*60*1000) { clock.warned = true; beep(1); note = "five minutes"; }
-    if (clock.remaining <= 0) { clock.remaining = 0; stopTick(); beep(3); note = "pitch it"; }
-    paintClock(note);
-  }, 250);
-  paintClock();
+  let entry = draftId && spins.find(s => s.id === draftId);
+  if (!entry) { entry = newEntry(); spins.unshift(entry); }
+  entry.createdAt = new Date().toISOString(); saveLog(); setDraft("");
+  clock = { entryId: entry.id, running: true, endAt: Date.now() + FULL, remaining: FULL }; saveClock();
+  warned = false; runTick(); paintClock(); renderCurrent(); renderLog();
 }
-function stopTick() { clearInterval(clock.tick); clock.running = false; }
-function pauseClock() { if (!clock.running) return; clock.remaining = clock.endAt - Date.now(); stopTick(); paintClock("paused"); }
-function resetClock() { stopTick(); clock.remaining = FULL; clock.warned = false; note = ""; paintClock(); }
-$("clock-start").addEventListener("click", startClock);
-$("clock-pause").addEventListener("click", pauseClock);
-$("clock-reset").addEventListener("click", resetClock);
+function runTick() {
+  stopTick();
+  tick = setInterval(() => {
+    const r = remaining();
+    if (!warned && r <= 5*60*1000 && r > 0) { warned = true; beep(1); }
+    if (r <= 0) { clock.running = false; clock.remaining = 0; saveClock(); stopTick(); beep(3); }
+    paintClock();
+  }, 250);
+}
+function stopTick() { clearInterval(tick); tick = null; }
+if (clock && !activeEntry()) { clock = null; saveClock(); }
+if (clock && clock.running) { if (remaining() <= 5*60*1000) warned = true; runTick(); }
 paintClock();
 
 /* ---------- Tabs ---------- */
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
   ["spin","log","board"].forEach(v => $("view-"+v).hidden = v !== b.dataset.tab);
-  if (b.dataset.tab === "spin") current.forEach((w,i) => rest(i,w));
+  if (b.dataset.tab === "spin") restAll();
+  if (b.dataset.tab === "board") loadBoard();
 }));
 
-/* ---------- Data layer (Vercel API) ---------- */
-const LS_LOG = "pitch-slots-log", LS_ID = "pitch-slots-client", LS_NAME = "pitch-slots-name";
-const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
-const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,10);
-let clientId = lsGet(LS_ID, "");
-if (!/^[a-z0-9]{16,40}$/.test(clientId)) { clientId = (newId() + newId()).slice(0, 32); lsSet(LS_ID, clientId); }
-let spins = (() => { try { return JSON.parse(lsGet(LS_LOG, "[]")) || []; } catch { return []; } })();
+/* ---------- Server ---------- */
 let pitches = [], sortMode = "top", online = false;
-const saveLog = () => lsSet(LS_LOG, JSON.stringify(spins));
-
 async function api(path, opts = {}) {
   const res = await fetch(path, { ...opts, headers: { "content-type": "application/json", "x-client-id": clientId, ...(opts.headers || {}) } });
   let data = null; try { data = await res.json(); } catch {}
   if (!res.ok) { const err = new Error((data && data.error) || "Request failed"); err.status = res.status; throw err; }
   return data;
 }
-
-function logCombo() {
-  spins.unshift({ id: newId(), sector: current[0], customer: current[1], model: current[2], createdAt: new Date().toISOString(), title: "", oneLiner: "", deckUrl: "", deckName: "", deckLink: "", posted: false });
-  saveLog(); renderLog();
-}
-function saveEntry(entry) { const i = spins.findIndex(s => s.id === entry.id); if (i >= 0) spins[i] = entry; saveLog(); renderLog(); }
-function myName() { return ($("my-name") ? $("my-name").value : lsGet(LS_NAME, "")).trim(); }
-
-async function postEntry(entry) {
-  if (!entry.title.trim()) { toast("Name the company before posting"); return; }
-  if (!myName()) { toast("Add your name at the top first"); $("my-name").focus(); return; }
-  await api("/api/pitches", { method: "POST", body: JSON.stringify({ id: entry.id, title: entry.title, oneLiner: entry.oneLiner, sector: entry.sector, customer: entry.customer, model: entry.model, name: myName(), deckUrl: entry.deckUrl, deckName: entry.deckName, deckLink: entry.deckLink }) });
-  entry.posted = true; saveEntry(entry); toast("Posted"); loadBoard();
-}
-async function unpostEntry(entry) {
-  await api("/api/pitches?id=" + encodeURIComponent(entry.id), { method: "DELETE" });
-  entry.posted = false; saveEntry(entry); toast("Taken down"); loadBoard();
-}
-async function deleteEntry(entry) {
-  if (entry.posted) { try { await api("/api/pitches?id=" + encodeURIComponent(entry.id), { method: "DELETE" }); } catch {} }
-  spins = spins.filter(s => s.id !== entry.id); saveLog(); renderLog(); loadBoard();
-}
-async function toggleVote(pitchId) {
-  const p = pitches.find(x => x.id === pitchId); if (!p) return;
-  p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard();
-  try { const r = await api("/api/vote", { method: "POST", body: JSON.stringify({ id: pitchId }) }); p.voted = r.voted; p.votes = r.votes; renderBoard(); }
-  catch (e) { p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard(); toast("Vote didn't go through"); }
-}
 let blobClient = null;
-async function uploadDeck(file, entryId) {
+async function putBlob(path, file, contentType) {
   if (!blobClient) blobClient = await import("https://esm.sh/@vercel/blob@2.8.0/client");
-  const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "deck.pdf";
-  return blobClient.upload(`decks/${entryId}-${safe}`, file, { access: "public", handleUploadUrl: "/api/upload", contentType: file.type || "application/pdf" });
+  return blobClient.upload(path, file, { access: "public", handleUploadUrl: "/api/upload", contentType });
+}
+async function firstSlide(file) {
+  const lib = window.pdfjsLib; if (!lib) throw new Error("pdf.js missing");
+  lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const base = page.getViewport({ scale: 1 });
+  const vp = page.getViewport({ scale: 1400 / base.width });
+  const canvas = document.createElement("canvas"); canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
+  const ctx = canvas.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("render failed")), "image/jpeg", 0.86));
 }
 
-/* ---------- Render: log ---------- */
-const dateFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
-function deckLinkHtml(e) {
-  const parts = [];
-  if (safeUrl(e.deckUrl)) parts.push(`<a href="${esc(e.deckUrl)}" target="_blank" rel="noopener noreferrer">${esc(e.deckName || "Deck (PDF)")}</a>`);
-  if (safeUrl(e.deckLink)) parts.push(`<a href="${esc(e.deckLink)}" target="_blank" rel="noopener noreferrer">Deck link</a>`);
-  return parts.join(" · ");
+/* ---------- Pitch card (used on Spin and in My pitches) ---------- */
+function comboLine(e) { return `<div class="combo-line">${esc(e.sector)}<i>×</i>${esc(e.customer)}<i>×</i>${esc(e.model)}</div>`; }
+function cardHtml(e, isCurrent) {
+  const id = esc(e.id);
+  const preview = e.thumbUrl ? `<img src="${esc(e.thumbUrl)}" alt="First slide of your deck"><span class="replace">Replace PDF</span>` : `${ICON.upload}<div><b>Upload your deck</b><br>PDF, drop it here or click to choose</div>`;
+  return `
+  <article class="pitch" data-id="${id}">
+    ${isCurrent ? `<h2>Your pitch</h2><p class="sub">Name it, sum it up in a line, and upload your deck. Post whenever you are ready.</p>` : `${comboLine(e)}<div class="meta">${esc(new Date(e.createdAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))}</div>`}
+    <label class="field"><span>Company name</span><input type="text" data-f="title" value="${esc(e.title)}" maxlength="80" placeholder="Saddle Synapse Capital"></label>
+    <label class="field"><span>One-line pitch</span><textarea data-f="oneLiner" maxlength="280" placeholder="We help … by …">${esc(e.oneLiner)}</textarea></label>
+    <div class="field"><span>Deck</span>
+      <label class="drop" data-drop="${id}">${preview}<input type="file" accept="application/pdf" data-file="${id}" aria-label="Upload deck PDF"></label>
+      <div class="meta" data-state="${id}">${e.deckName ? esc(e.deckName) : ""}</div>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-act="post" ${online ? "" : "disabled"}>${e.posted ? "Update post" : "Post to leaderboard"}</button>
+      ${e.posted ? `<span class="posted">On the leaderboard</span><button class="link" data-act="unpost">Take down</button>` : ""}
+      ${isCurrent ? "" : `<button class="link danger" data-act="delete" style="margin-left:auto">Delete</button>`}
+    </div>
+    ${online ? "" : `<div class="hint">The leaderboard isn't connected right now. Your work is saved in this browser.</div>`}
+  </article>`;
 }
-function comboHtml(e) { return `<div class="combo">${esc(e.sector)}<i>×</i>${esc(e.customer)}<i>×</i>${esc(e.model)}</div>`; }
-
+function renderCurrent() {
+  const e = activeEntry() || { ...newEntry(), id: "new" };
+  $("current-slot").innerHTML = cardHtml(e, true);
+}
 function renderLog() {
   const list = $("log-list");
-  if (!spins.length) { list.innerHTML = `<div class="empty">Nothing yet. Spin, then start the clock.</div>`; return; }
-  const focusedId = document.activeElement && document.activeElement.id;
-  const drafts = {}; list.querySelectorAll("input[type=text], input[type=url], textarea").forEach(el => { if (el.id) drafts[el.id] = el.value; });
-  list.innerHTML = spins.map(e => { const id = esc(e.id); return `
-    <article class="item" data-id="${id}">
-      ${comboHtml(e)}
-      <div class="meta"><span class="dot ${e.posted ? "on" : ""}"></span>${e.posted ? "Posted" : "Draft"}<span>·</span>${esc(dateFmt.format(new Date(e.createdAt)))}</div>
-      <div class="fields">
-        <input type="text" id="t-${id}" value="${esc(e.title)}" placeholder="Company name" aria-label="Company name" maxlength="80">
-        <textarea id="o-${id}" placeholder="One-line pitch" aria-label="One-line pitch" maxlength="280">${esc(e.oneLiner)}</textarea>
-        <input type="url" id="l-${id}" value="${esc(e.deckLink)}" placeholder="Deck link (optional)" aria-label="Deck link">
-      </div>
-      <div class="actions">
-        <button class="small-btn" data-act="save">Save</button>
-        ${online ? `<button class="link" data-act="post">${e.posted ? "Update post" : "Post to leaderboard"}</button>` : ""}
-        ${online && e.posted ? `<button class="link" data-act="unpost">Take down</button>` : ""}
-        ${online ? `<label class="link upload" for="f-${id}">Upload PDF<input type="file" id="f-${id}" accept="application/pdf,image/png,image/jpeg" hidden></label>` : ""}
-        <span class="deck meta" id="d-${id}">${deckLinkHtml(e)}</span>
-        <button class="link danger" data-act="delete" style="margin-left:auto">Delete</button>
-      </div>
-    </article>`; }).join("");
-  for (const k in drafts) { const el = $(k); if (el) el.value = drafts[k]; }
-  if (focusedId && $(focusedId)) $(focusedId).focus();
+  list.innerHTML = spins.length ? spins.map(e => cardHtml(e, false)).join("") : `<div class="empty">Nothing yet. Spin, then start the clock.</div>`;
 }
-function readForm(e) { return { ...e, title: $("t-"+e.id).value, oneLiner: $("o-"+e.id).value, deckLink: ($("l-"+e.id).value || "").trim() }; }
-$("log-list").addEventListener("click", async (ev) => {
-  const btn = ev.target.closest("button[data-act]"); if (!btn) return;
-  const card = btn.closest(".item"); const e0 = spins.find(s => s.id === card.dataset.id); if (!e0) return;
-  const e = readForm(e0);
-  if (e.deckLink && !/^https?:\/\//i.test(e.deckLink)) { toast("Deck link should start with https://"); return; }
-  btn.disabled = true;
+function renderAllCards() {
+  const f = document.activeElement, pitchEl = f && f.closest && f.closest(".pitch");
+  const where = pitchEl && (pitchEl.closest("#current-slot") ? "#current-slot" : "#log-list");
+  const fid = pitchEl && pitchEl.dataset.id, ff = f && f.dataset && f.dataset.f;
+  renderCurrent(); renderLog();
+  if (where && fid && ff) { const el = document.querySelector(`${where} .pitch[data-id="${fid}"] [data-f="${ff}"]`); if (el) { el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch {} } }
+}
+function entryOf(el) {
+  const card = el.closest(".pitch"); if (!card) return null;
+  if (card.dataset.id === "new") { const e = materialize(); card.dataset.id = e.id; card.querySelectorAll("[data-drop],[data-file],[data-state]").forEach(n => { for (const k of ["drop","file","state"]) if (n.dataset[k] === "new") n.dataset[k] = e.id; }); return e; }
+  return spins.find(s => s.id === card.dataset.id);
+}
+
+// Typing autosaves
+document.addEventListener("input", (ev) => {
+  const f = ev.target.dataset.f; if (!f) return;
+  const e = entryOf(ev.target); if (!e) return;
+  e[f] = ev.target.value; saveLog();
+  // mirror into the other copy of the same card
+  document.querySelectorAll(`.pitch[data-id="${e.id}"] [data-f="${f}"]`).forEach(el => { if (el !== ev.target) el.value = ev.target.value; });
+});
+// Drag and drop
+document.addEventListener("dragover", (ev) => { const d = ev.target.closest?.(".drop"); if (d) { ev.preventDefault(); d.classList.add("over"); } });
+document.addEventListener("dragleave", (ev) => { const d = ev.target.closest?.(".drop"); if (d) d.classList.remove("over"); });
+document.addEventListener("drop", (ev) => { const d = ev.target.closest?.(".drop"); if (!d) return; ev.preventDefault(); d.classList.remove("over"); const f = ev.dataTransfer.files[0]; if (f) handleFile(entryOf(d), f); });
+document.addEventListener("change", (ev) => { if (ev.target.dataset.file && ev.target.files[0]) handleFile(entryOf(ev.target), ev.target.files[0]); });
+
+async function handleFile(e, file) {
+  if (!e) return;
+  const setState = (t) => document.querySelectorAll(`[data-state="${e.id}"]`).forEach(el => el.textContent = t);
+  if (!(file.type === "application/pdf" || /\.pdf$/i.test(file.name))) { toast("Export your deck as a PDF first"); return; }
+  if (file.size > 25*1024*1024) { toast("Keep the deck under 25 MB"); return; }
+  if (!online) { toast("Uploads need the leaderboard connection"); return; }
   try {
-    if (btn.dataset.act === "save") { saveEntry(e); toast("Saved"); if (e.posted && online) await postEntry(e); }
-    if (btn.dataset.act === "post") await postEntry(e);
-    if (btn.dataset.act === "unpost") await unpostEntry(e);
-    if (btn.dataset.act === "delete") {
-      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "Tap again to delete"; btn.disabled = false; return; }
-      await deleteEntry(e); toast("Deleted");
+    setState("Reading your first slide…");
+    const thumb = await firstSlide(file);
+    setState("Uploading…");
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "deck.pdf";
+    const [deck, img] = await Promise.all([
+      putBlob(`decks/${e.id}-${safe}`, file, "application/pdf"),
+      putBlob(`thumbs/${e.id}.jpg`, thumb, "image/jpeg"),
+    ]);
+    e.deckUrl = deck.url; e.thumbUrl = img.url; e.deckName = file.name; saveLog();
+    renderAllCards();
+    if (e.posted) await post(e, true);
+    toast("Deck attached");
+  } catch (err) { setState("Upload failed. Try again."); }
+}
+async function post(e, quiet) {
+  if (!e.title.trim()) { toast("Add a company name first"); return; }
+  if (!e.deckUrl) { toast("Upload your deck PDF first"); return; }
+  await api("/api/pitches", { method: "POST", body: JSON.stringify({ id: e.id, title: e.title, oneLiner: e.oneLiner, sector: e.sector, customer: e.customer, model: e.model, name: lsGet(LS.name, ""), deckUrl: e.deckUrl, deckName: e.deckName, thumbUrl: e.thumbUrl }) });
+  e.posted = true; saveLog(); renderAllCards(); if (!quiet) toast("Posted to the leaderboard"); loadBoard();
+}
+document.addEventListener("click", async (ev) => {
+  const b = ev.target.closest("[data-act]"); if (!b) return;
+  const e = entryOf(b); if (!e) return;
+  b.disabled = true;
+  try {
+    if (b.dataset.act === "post") {
+      if (!lsGet(LS.name, "")) { const n = await askName(b); if (!n) { b.disabled = false; return; } }
+      await post(e);
+    }
+    if (b.dataset.act === "unpost") { await api("/api/pitches?id=" + encodeURIComponent(e.id), { method: "DELETE" }); e.posted = false; saveLog(); renderAllCards(); toast("Taken down"); loadBoard(); }
+    if (b.dataset.act === "delete") {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Tap again to delete"; b.disabled = false; return; }
+      if (e.posted) { try { await api("/api/pitches?id=" + encodeURIComponent(e.id), { method: "DELETE" }); } catch {} }
+      spins = spins.filter(s => s.id !== e.id); saveLog(); if (draftId === e.id) setDraft("");
+      if (clock && clock.entryId === e.id) { clock = null; saveClock(); stopTick(); paintClock(); }
+      renderAllCards(); loadBoard(); toast("Deleted");
     }
   } catch (err) { toast(err.status === 429 ? "Slow down a little and try again" : "Couldn't reach the leaderboard. Try again."); }
-  btn.disabled = false;
+  b.disabled = false;
 });
-$("log-list").addEventListener("change", async (ev) => {
-  const input = ev.target; if (input.type !== "file" || !input.files[0]) return;
-  const card = input.closest(".item"); const e0 = spins.find(s => s.id === card.dataset.id); if (!e0) return;
-  const file = input.files[0];
-  if (!/^(application\/pdf|image\/(png|jpeg))$/.test(file.type || "application/pdf")) { toast("Export your deck as a PDF first"); return; }
-  if (file.size > 25*1024*1024) { toast("Keep the deck under 25 MB"); return; }
-  $("d-"+e0.id).textContent = "Uploading…";
-  try {
-    const blob = await uploadDeck(file, e0.id);
-    const e = readForm(e0); e.deckUrl = blob.url; e.deckName = file.name;
-    saveEntry(e); if (e.posted) await postEntry(e);
-    toast("Deck attached");
-  } catch (err) { $("d-"+e0.id).textContent = "Upload failed"; }
-});
+// Inline name prompt, shown once
+function askName(anchor) {
+  return new Promise((resolve) => {
+    const row = anchor.closest(".row");
+    const box = document.createElement("div"); box.className = "row";
+    box.innerHTML = `<input type="text" id="name-input" maxlength="40" placeholder="Your name on the leaderboard" style="flex:1;min-width:180px"><button class="btn dark" id="name-ok">Continue</button>`;
+    row.after(box); $("name-input").focus();
+    const done = () => { const v = $("name-input").value.trim(); if (!v) { $("name-input").focus(); return; } lsSet(LS.name, v); box.remove(); resolve(v); };
+    $("name-ok").onclick = done; $("name-input").onkeydown = (k) => { if (k.key === "Enter") done(); };
+  });
+}
 
-/* ---------- Render: leaderboard ---------- */
+/* ---------- Leaderboard ---------- */
 function renderBoard() {
   const list = $("board-list");
-  if (!online) { list.innerHTML = `<div class="empty">The shared leaderboard is not connected yet.</div>`; return; }
-  if (!pitches.length) { list.innerHTML = `<div class="empty">No pitches yet. Post one from your log.</div>`; return; }
-  const rows = [...pitches];
-  rows.sort(sortMode === "top" ? (a,b) => b.votes - a.votes || String(b.postedAt).localeCompare(a.postedAt) : (a,b) => String(b.postedAt).localeCompare(a.postedAt));
+  if (!online) { list.innerHTML = `<div class="empty" style="grid-column:1/-1">The leaderboard isn't connected yet.</div>`; return; }
+  if (!pitches.length) { list.innerHTML = `<div class="empty" style="grid-column:1/-1">No pitches yet. Be the first.</div>`; return; }
+  const rows = [...pitches].sort(sortMode === "top" ? (a,b) => b.votes - a.votes || String(b.postedAt).localeCompare(a.postedAt) : (a,b) => String(b.postedAt).localeCompare(a.postedAt));
   list.innerHTML = rows.map((p, i) => `
-    <article class="item lb">
-      <div class="rank">${i+1}</div>
-      <div style="min-width:0">
-        <h3>${esc(p.title || "Untitled")}</h3>
-        ${comboHtml(p)}
-        ${p.oneLiner ? `<p>${esc(p.oneLiner)}</p>` : ""}
-        <div class="meta" style="margin-top:10px"><span>${esc(p.name || "Someone")}</span><span>·</span>${esc(dateFmt.format(new Date(p.postedAt)))}${deckLinkHtml(p) ? "<span>·</span>" + deckLinkHtml(p) : ""}</div>
+    <article class="card">
+      <a class="slide" href="${esc(p.deckUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(p.title)} deck">
+        ${p.thumbUrl ? `<img src="${esc(p.thumbUrl)}" alt="" loading="lazy">` : ""}
+        <div class="floaters" aria-hidden="true"><span class="float a">${esc(p.sector)}</span><span class="float b">${esc(p.customer)}</span><span class="float c">${esc(p.model)}</span></div>
+      </a>
+      <div class="card-body">
+        <div style="min-width:0">
+          <div class="rank">${sortMode === "top" ? "#" + (i+1) : ""}</div>
+          <h3>${esc(p.title)}</h3>
+          ${p.oneLiner ? `<p>${esc(p.oneLiner)}</p>` : ""}
+          <div class="meta">${esc(p.name || "Someone")}</div>
+        </div>
+        <button class="vote" data-vote="${esc(p.id)}" aria-pressed="${!!p.voted}" ${p.mine ? "disabled" : ""} title="${p.mine ? "Your pitch" : "I would fund this"}" aria-label="Upvote ${esc(p.title)}">${ICON.up}${p.votes}</button>
       </div>
-      <button class="vote" data-vote="${esc(p.id)}" aria-pressed="${!!p.voted}" ${p.mine ? "disabled" : ""} aria-label="Upvote ${esc(p.title)}" title="${p.mine ? "Your pitch" : "I would fund this"}">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>${p.votes}
-      </button>
     </article>`).join("");
 }
-$("board-list").addEventListener("click", (ev) => { const b = ev.target.closest("[data-vote]"); if (b && !b.disabled) toggleVote(b.dataset.vote); });
-function setSort(m) { sortMode = m; $("sort-top").style.color = m === "top" ? "var(--ink)" : ""; $("sort-new").style.color = m === "new" ? "var(--ink)" : ""; $("sort-top").setAttribute("aria-pressed", m==="top"); $("sort-new").setAttribute("aria-pressed", m==="new"); renderBoard(); }
+$("board-list").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("[data-vote]"); if (!b || b.disabled) return;
+  const p = pitches.find(x => x.id === b.dataset.vote); if (!p) return;
+  p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard();
+  try { const r = await api("/api/vote", { method: "POST", body: JSON.stringify({ id: p.id }) }); p.voted = r.voted; p.votes = r.votes; renderBoard(); }
+  catch { p.voted = !p.voted; p.votes += p.voted ? 1 : -1; renderBoard(); toast("Vote didn't go through"); }
+});
+function setSort(m) { sortMode = m; $("sort-top").setAttribute("aria-pressed", m === "top"); $("sort-new").setAttribute("aria-pressed", m === "new"); renderBoard(); }
 $("sort-top").addEventListener("click", () => setSort("top"));
 $("sort-new").addEventListener("click", () => setSort("new"));
-
 async function loadBoard() {
-  try { const r = await api("/api/pitches"); pitches = r.pitches || []; if (!online) { online = true; renderLog(); } }
-  catch (e) { if (e.status === 503 || e.status === 404 || !e.status) online = false; }
+  const was = online;
+  try { const r = await api("/api/pitches"); pitches = r.pitches || []; online = true; }
+  catch (e) { online = false; }
+  if (was !== online) renderAllCards();
   renderBoard();
 }
 
 /* ---------- Boot ---------- */
-$("my-name").value = lsGet(LS_NAME, "");
-$("my-name").addEventListener("input", () => lsSet(LS_NAME, $("my-name").value.trim()));
-renderLog();
-$("board-list").innerHTML = `<div class="empty">Loading…</div>`;
+renderAllCards();
+$("board-list").innerHTML = `<div class="empty" style="grid-column:1/-1">Loading…</div>`;
 loadBoard();
-setInterval(() => { if (!document.hidden && !$("view-board").hidden) loadBoard(); }, 20000);
-document.querySelector('[data-tab="board"]').addEventListener("click", loadBoard);
+setInterval(() => { if (!document.hidden && !$("view-board").hidden) loadBoard(); }, 45000);
 })();
 </script>
-
 </body>
 </html>

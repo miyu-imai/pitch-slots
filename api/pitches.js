@@ -43,13 +43,14 @@ export async function POST(request) {
   if (existing && existing.ownerId !== me) return json({ error: "Not your pitch" }, 403);
 
   const deckUrl = BLOB_RE.test(body.deckUrl || "") ? clip(body.deckUrl, 500) : "";
-  const deckLink = /^https?:\/\//i.test(body.deckLink || "") ? clip(body.deckLink, 500) : "";
+  const thumbUrl = BLOB_RE.test(body.thumbUrl || "") ? clip(body.thumbUrl, 500) : "";
+  if (!deckUrl) return json({ error: "Upload a deck PDF first" }, 400);
   const now = new Date().toISOString();
   const pitch = {
     id, title, name,
     oneLiner: clip(body.oneLiner, 280),
     sector: clip(body.sector, 60), customer: clip(body.customer, 60), model: clip(body.model, 60),
-    deckUrl, deckName: deckUrl ? clip(body.deckName, 120) : "", deckLink,
+    deckUrl, deckName: clip(body.deckName, 120), thumbUrl,
     postedAt: existing ? existing.postedAt : now, updatedAt: now,
     ownerId: me,
   };
